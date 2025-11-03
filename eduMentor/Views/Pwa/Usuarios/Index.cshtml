@@ -1,0 +1,388 @@
+﻿@model IEnumerable<eduMentor.Models.Usuario>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+}
+
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .user-table {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .badge-activo {
+        background: #28a745;
+        color: white;
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .badge-inactivo {
+        background: #dc3545;
+        color: white;
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .badge-role {
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .role-Admin {
+        background: #dc3545;
+        color: white;
+    }
+
+    .role-Instructor {
+        background: #0dcaf0;
+        color: white;
+    }
+
+    .role-Estudiante {
+        background: #198754;
+        color: white;
+    }
+
+    .role-SinRol {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        margin: 0 2px;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="container-fluid">
+    @Html.AntiForgeryToken()
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2"><i class="bi bi-people-fill"></i> Gestión de Usuarios</h1>
+                <p class="mb-0">Administra los usuarios y roles de la plataforma eduMentor</p>
+            </div>
+            <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#createUsuarioModal">
+                <i class="bi bi-person-plus"></i> Crear Usuario
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar por nombre, email o usuario...">
+                </div>
+                <div class="col-md-2">
+                    <select id="estadoFilter" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="rolFilter" class="form-select">
+                        <option value="">Todos los roles</option>
+                        @if (ViewBag.Roles != null)
+                        {
+                            @foreach (var role in ViewBag.Roles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        }
+                        <option value="Sin Rol">Sin Rol</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-x-circle"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="user-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="usuariosTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th><i class="bi bi-person"></i> Nombre</th>
+                        <th><i class="bi bi-at"></i> Email</th>
+                        <th><i class="bi bi-person-badge"></i> Usuario</th>
+                        <th><i class="bi bi-shield-check"></i> Rol</th>
+                        <th><i class="bi bi-telephone"></i> Teléfono</th>
+                        <th><i class="bi bi-calendar"></i> Registro</th>
+                        <th><i class="bi bi-toggle-on"></i> Estado</th>
+                        <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var usuario in Model)
+                        {
+                            var userRole = ViewBag.UserRoles != null && ViewBag.UserRoles.ContainsKey(usuario.Id)
+                            ? ViewBag.UserRoles[usuario.Id]
+                            : "Sin Rol";
+
+                            <tr data-nombre="@usuario.Nombre?.ToLower()"
+                                data-email="@usuario.Email?.ToLower()"
+                                data-username="@usuario.UserName?.ToLower()"
+                                data-rol="@userRole"
+                                data-activo="@usuario.Activo.ToString().ToLower()">
+                                <td>
+                                    <strong>@usuario.Nombre</strong>
+                                </td>
+                                <td>@usuario.Email</td>
+                                <td>@usuario.UserName</td>
+                                <td>
+                                    <span class="badge-role role-@userRole.Replace(" ", "")">
+                                        <i class="bi bi-shield-fill-check"></i> @userRole
+                                    </span>
+                                </td>
+                                <td>@(usuario.PhoneNumber ?? "N/A")</td>
+                                <td>@usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (usuario.Activo)
+                                    {
+                                        <span class="badge-activo">
+                                            <i class="bi bi-check-circle"></i> Activo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-inactivo">
+                                            <i class="bi bi-x-circle"></i> Inactivo
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-info btn-action text-white"
+                                            onclick="openDetailsModal(@usuario.Id, '@Html.Raw(usuario.Nombre)', '@usuario.Email', '@usuario.UserName', '@userRole', '@usuario.PhoneNumber', '@usuario.FechaRegistro.ToString("dd/MM/yyyy")', '@(usuario.UltimoLogin?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")', @usuario.Activo.ToString().ToLower())"
+                                            title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-action text-white"
+                                            onclick="openEditModal(@usuario.Id)"
+                                            title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-action"
+                                            onclick="confirmDelete(@usuario.Id, '@Html.Raw(usuario.Nombre)')"
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                                <p class="text-muted mt-3">No hay usuarios registrados</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @await Html.PartialAsync("~/Views/Pwa/Usuarios/_CreateUsuarioModal.cshtml", new eduMentor.Models.ViewModels.UsuarioViewModel())
+    @await Html.PartialAsync("~/Views/Pwa/Usuarios/_EditUsuarioModal.cshtml", new eduMentor.Models.ViewModels.UsuarioViewModel())
+
+
+</div>
+
+
+
+<!-- Modal Ver Detalles -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="detailsModalLabel">
+                    <i class="bi bi-eye"></i> Detalles del Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-4"><i class="bi bi-person"></i> Nombre:</dt>
+                    <dd class="col-sm-8" id="detailNombre"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-at"></i> Email:</dt>
+                    <dd class="col-sm-8" id="detailEmail"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-person-badge"></i> Usuario:</dt>
+                    <dd class="col-sm-8" id="detailUserName"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-shield-check"></i> Rol:</dt>
+                    <dd class="col-sm-8" id="detailRole"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-telephone"></i> Teléfono:</dt>
+                    <dd class="col-sm-8" id="detailPhoneNumber"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-calendar"></i> Fecha Registro:</dt>
+                    <dd class="col-sm-8" id="detailFechaRegistro"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-clock"></i> Último Login:</dt>
+                    <dd class="col-sm-8" id="detailUltimoLogin"></dd>
+
+                    <dt class="col-sm-4"><i class="bi bi-toggle-on"></i> Estado:</dt>
+                    <dd class="col-sm-8" id="detailEstado"></dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Abrir modal de edición con datos del usuario
+        function openEditModal(id) {
+            fetch(`/Pwa/Usuarios/GetUsuario/${id}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al obtener datos del usuario');
+                    return response.json();
+                })
+                .then(data => {
+                    document.querySelector('#editUsuarioForm input[name="Id"]').value = data.id;
+                    document.querySelector('#editUsuarioForm input[name="Nombre"]').value = data.nombre;
+                    document.querySelector('#editUsuarioForm input[name="Email"]').value = data.email;
+                    document.querySelector('#editUsuarioForm input[name="UserName"]').value = data.userName;
+                    document.querySelector('#editUsuarioForm input[name="PhoneNumber"]').value = data.phoneNumber || '';
+                    document.querySelector('#editUsuarioForm select[name="Role"]').value = data.role || '';
+                    document.querySelector('#editUsuarioForm input[name="Activo"]').checked = data.activo === true;
+
+                    const modal = new bootstrap.Modal(document.getElementById('editUsuarioModal'));
+                    modal.show();
+                })
+                .catch(err => {
+                    alert('Error al cargar datos del usuario: ' + err.message);
+                });
+        }
+
+        // Modal de detalles
+        function openDetailsModal(id, nombre, email, username, role, phone, fechaRegistro, ultimoLogin, activo) {
+            document.getElementById('detailNombre').textContent = nombre;
+            document.getElementById('detailEmail').textContent = email;
+            document.getElementById('detailUserName').textContent = username;
+            document.getElementById('detailRole').innerHTML =
+                '<span class="badge-role role-' + role.replace(' ', '') + '">' +
+                '<i class="bi bi-shield-fill-check"></i> ' + role + '</span>';
+            document.getElementById('detailPhoneNumber').textContent = phone || 'N/A';
+            document.getElementById('detailFechaRegistro').textContent = fechaRegistro;
+            document.getElementById('detailUltimoLogin').textContent = ultimoLogin;
+            document.getElementById('detailEstado').innerHTML = activo
+                ? '<span class="badge-activo"><i class="bi bi-check-circle"></i> Activo</span>'
+                : '<span class="badge-inactivo"><i class="bi bi-x-circle"></i> Inactivo</span>';
+
+            new bootstrap.Modal(document.getElementById('detailsModal')).show();
+        }
+
+        // Confirmación de eliminación
+        function confirmDelete(id, nombre) {
+            if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${nombre}"? Esta acción no se puede deshacer.`)) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/Usuarios/Delete/${id}`;
+
+                var token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) {
+                    var hiddenToken = document.createElement('input');
+                    hiddenToken.type = 'hidden';
+                    hiddenToken.name = '__RequestVerificationToken';
+                    hiddenToken.value = token.value;
+                    form.appendChild(hiddenToken);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Filtros
+        document.getElementById('searchInput').addEventListener('keyup', filterUsuarios);
+        document.getElementById('estadoFilter').addEventListener('change', filterUsuarios);
+        document.getElementById('rolFilter').addEventListener('change', filterUsuarios);
+
+        function filterUsuarios() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const estadoFilter = document.getElementById('estadoFilter').value;
+            const rolFilter = document.getElementById('rolFilter').value;
+            const rows = document.querySelectorAll('#usuariosTable tbody tr[data-nombre]');
+
+            rows.forEach(row => {
+                const nombre = row.dataset.nombre || '';
+                const email = row.dataset.email || '';
+                const username = row.dataset.username || '';
+                const activo = row.dataset.activo;
+                const rol = row.dataset.rol;
+
+                const matchSearch = nombre.includes(searchTerm) ||
+                                    email.includes(searchTerm) ||
+                                    username.includes(searchTerm);
+                const matchEstado = !estadoFilter || activo === estadoFilter;
+                const matchRol = !rolFilter || rol === rolFilter;
+
+                row.style.display = (matchSearch && matchEstado && matchRol) ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('estadoFilter').value = '';
+            document.getElementById('rolFilter').value = '';
+            filterUsuarios();
+        }
+    </script>
+}

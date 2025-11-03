@@ -1,0 +1,130 @@
+﻿@model eduMentor.Models.Contenido
+@{
+    ViewData["Title"] = "Responder Tarea";
+    var contenido = !string.IsNullOrEmpty(Model.JsonContenido)
+        ? Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(Model.JsonContenido)
+        : null;
+}
+
+<div class="container mt-4">
+    @if (contenido == null)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            Esta tarea no tiene un contenido JSON válido.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-ui-checks"></i> @Model.Titulo</h4>
+                <small>Módulo: @ViewBag.TituloModulo</small>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">@contenido.descripcion</p>
+
+                <form id="responderTareaForm" onsubmit="return enviarRespuestas(event)">
+                    @Html.AntiForgeryToken() 
+                    <div id="preguntasContainer"></div>
+
+                    <div class="text-end mt-4">
+                        <a href="javascript:history.back()" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left-circle"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Enviar Respuestas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const contenido = @Html.Raw(Model.JsonContenido ?? "null");
+        if (!contenido || !contenido.preguntas) return;
+
+        const contenedor = document.getElementById('preguntasContainer');
+        contenedor.innerHTML = "";
+
+        contenido.preguntas.forEach((pregunta, i) => {
+            const div = document.createElement('div');
+            div.className = "border rounded p-3 mb-3";
+
+            let html = `<h6 class="fw-bold">${i + 1}. ${pregunta.texto}</h6>`;
+
+            if (pregunta.tipo === "texto") {
+                html += `<input type="text" class="form-control mt-2" name="pregunta_${i}" placeholder="Escribe tu respuesta..." required />`;
+            } else if (pregunta.tipo === "opcion" && pregunta.opciones) {
+                html += `<div class="mt-2">`;
+                pregunta.opciones.forEach((op, j) => {
+                    html += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="pregunta_${i}" id="p${i}_o${j}" value="${op}" required>
+                            <label class="form-check-label" for="p${i}_o${j}">${op}</label>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            div.innerHTML = html;
+            contenedor.appendChild(div);
+        });
+    });
+
+    // ✅ Enviar las respuestas al backend
+    function enviarRespuestas(event) {
+        event.preventDefault();
+
+        const respuestas = [];
+        const form = document.getElementById('responderTareaForm');
+        const contenido = @Html.Raw(Model.JsonContenido ?? "null");
+
+        if (!contenido || !contenido.preguntas) {
+            alert("No hay preguntas válidas.");
+            return false;
+        }
+
+        contenido.preguntas.forEach((pregunta, i) => {
+            const valor =
+                form.querySelector(`[name='pregunta_${i}']:checked`)?.value ||
+                form.querySelector(`[name='pregunta_${i}']`)?.value || "";
+            respuestas.push({
+                texto: pregunta.texto,
+                tipo: pregunta.tipo,
+                respuesta: valor
+            });
+        });
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        fetch(`/ProgresoContenidos/GuardarRespuestas?idContenido=@Model.IdContenido`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(respuestas)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("✅ Respuestas enviadas correctamente y tarea completada.");
+                // Puedes redirigir al módulo o al contenido
+                window.location.href = `/Contenidos/Index`;
+            } else {
+                alert("⚠️ " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("❌ Error al enviar las respuestas.");
+        });
+
+        return false;
+    }
+</script>

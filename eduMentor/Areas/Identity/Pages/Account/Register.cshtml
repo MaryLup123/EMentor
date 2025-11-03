@@ -1,0 +1,98 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Registro";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-3 fw-bold text-primary">Crear una cuenta</h2>
+                    <p class="text-center text-muted mb-4">Selecciona tu tipo de registro y completa tus datos</p>
+
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                        <!-- SWITCH para rol -->
+                        <div class="d-flex justify-content-center align-items-center mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="roleSwitch" onchange="toggleRole()" />
+                                <label class="form-check-label fw-semibold" id="roleLabel" for="roleSwitch">
+                                    👨‍🏫 Registrarme como Instructor
+                                </label>
+                            </div>
+                            <input type="hidden" asp-for="Input.Rol" id="rolHidden" value="Alumno" />
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <label asp-for="Input.Email">Correo electrónico</label>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                            <label asp-for="Input.Password">Contraseña</label>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+
+                        <!-- Confirm -->
+                        <div class="form-floating mb-4">
+                            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                            <label asp-for="Input.ConfirmPassword">Confirmar contraseña</label>
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <!-- Botón -->
+                        <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary fw-semibold">
+                            Registrarme como <span id="roleText">Alumno 🎓</span>
+                        </button>
+                    </form>
+
+                    <hr class="my-4" />
+                    <p class="text-center text-muted small">
+                        ¿Ya tienes una cuenta?
+                        <a asp-page="./Login" class="fw-semibold text-decoration-none">Inicia sesión aquí</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function toggleRole() {
+            const switchEl = document.getElementById('roleSwitch');
+            const hiddenRol = document.getElementById('rolHidden');
+            const roleLabel = document.getElementById('roleLabel');
+            const roleText = document.getElementById('roleText');
+            const btn = document.getElementById('registerSubmit');
+
+            if (switchEl.checked) {
+                // Instructor
+                hiddenRol.value = 'Instructor';
+                roleLabel.innerHTML = '👨‍🏫 Registrarme como Instructor';
+                roleText.innerText = 'Instructor 👨‍🏫';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-warning');
+            } else {
+                // Alumno
+                hiddenRol.value = 'Alumno';
+                roleLabel.innerHTML = '🎓 Registrarme como Alumno';
+                roleText.innerText = 'Alumno 🎓';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-primary');
+            }
+        }
+
+        // Inicializa como alumno por defecto
+        document.addEventListener('DOMContentLoaded', toggleRole);
+    </script>
+}

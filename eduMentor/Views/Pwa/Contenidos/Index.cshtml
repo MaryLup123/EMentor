@@ -1,0 +1,582 @@
+﻿@model IEnumerable<eduMentor.Models.ViewModels.ContenidoConProgresoViewModel>
+
+@{
+    ViewData["Title"] = "Contenido del Módulo";
+}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .breadcrumb-custom {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .breadcrumb-custom a {
+            color: #11998e;
+            text-decoration: none;
+        }
+
+            .breadcrumb-custom a:hover {
+                text-decoration: underline;
+            }
+
+    .modulo-info-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .contenido-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+        height: 100%;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+        .contenido-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+    .contenido-card-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+        position: relative;
+    }
+
+        .contenido-card-header.tipo-tarea {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .contenido-card-header.tipo-video {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+    .contenido-orden {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255,255,255,0.3);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .contenido-card-body {
+        padding: 1.5rem;
+    }
+
+    .contenido-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+
+    .btn-action-card {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        border-radius: 50%;
+        margin-left: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tipo-badge {
+        font-size: 0.85rem;
+        padding: 0.5em 1em;
+        border-radius: 20px;
+    }
+
+    .tipo-Lectura {
+        background: #28a745;
+        color: white;
+    }
+
+    .tipo-Video {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .tipo-Tarea {
+        background: #dc3545;
+        color: white;
+    }
+
+    .tipo-Evaluacion {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: #dee2e6;
+        }
+
+    .btn-create-type {
+        margin: 0.5rem;
+    }
+
+    .create-buttons-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-custom">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="/Cursos/Index">
+                        <i class="bi bi-house-door"></i> Mis Cursos
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="/Moduloes/Index?idCurso=@ViewBag.IdCurso">
+                        <i class="bi bi-collection"></i> @ViewBag.TituloCurso
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="bi bi-file-earmark-text"></i> @ViewBag.TituloModulo
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Información del Módulo -->
+    <div class="modulo-info-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="mb-2">
+                    <i class="bi bi-collection"></i> @ViewBag.TituloModulo
+                </h4>
+                <p class="text-muted mb-0">Curso: @ViewBag.TituloCurso</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/Moduloes/Index?idCurso=@ViewBag.IdCurso" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Módulos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2"><i class="bi bi-file-earmark-text"></i> Contenido del Módulo</h1>
+                <p class="mb-0">Administra las lecciones, lecturas y tareas</p>
+            </div>
+            @if (ViewBag.EsInstructor)
+            {
+                <div class="create-buttons-group">
+                    <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#createContenidoLecturaModal">
+                        <i class="bi bi-file-text"></i> Crear Lectura
+                    </button>
+                    <a asp-action="CreateTarea" asp-route-idModulo="@ViewBag.IdModulo" class="btn btn-danger">
+                        <i class="bi bi-ui-checks"></i> Nueva Tarea / Formulario
+                    </a>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar contenido por título...">
+                </div>
+                <div class="col-md-3">
+                    <select id="tipoFilter" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="Lectura">Lectura</option>
+                        <option value="Video">Video</option>
+                        <option value="Tarea">Tarea</option>
+                        <option value="Evaluacion">Evaluación</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Tarjetas de Contenido -->
+    <div class="row" id="contenidosContainer">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var contenido in Model)
+            {
+                var headerClass = contenido.EsTarea ? "tipo-tarea" : (contenido.Tipo == "Video" ? "tipo-video" : "");
+                var iconoTipo = contenido.Tipo switch
+                {
+                    "Video" => "bi-play-circle-fill",
+                    "Tarea" => "bi-clipboard-check",
+                    "Evaluacion" => "bi-clipboard-check",
+                    _ => "bi-file-text"
+                };
+
+                <div class="col-xl-4 col-lg-6 col-md-6 mb-4 contenido-item"
+                     data-titulo="@contenido.Titulo.ToLower()"
+                     data-tipo="@contenido.Tipo">
+
+                    <div class="card contenido-card shadow-sm">
+                        <!-- Botones de acción flotantes -->
+                        @if (ViewBag.EsInstructor)
+                        {
+                            <div class="contenido-actions">
+                                <button type="button" class="btn btn-warning btn-action-card text-white"
+                                        onclick="event.stopPropagation(); openEditContenido(@contenido.IdContenido);"
+                                        title="Editar contenido">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+
+                                <button type="button" class="btn btn-danger btn-action-card"
+                                        onclick="event.stopPropagation(); confirmDelete(@contenido.IdContenido, '@Html.Raw(contenido.Titulo)');"
+                                        title="Eliminar contenido">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        }
+
+
+                        <!-- Header de la tarjeta -->
+                        <div class="contenido-card-header @headerClass">
+                            <div class="contenido-orden">@contenido.Orden</div>
+                            <h5 class="mb-1" style="margin-left: 50px;">
+                                <i class="bi @iconoTipo"></i> @contenido.Titulo
+                            </h5>
+                            <small><i class="bi bi-calendar"></i> @contenido.FechaCreacion.ToString("dd/MM/yyyy")</small>
+                        </div>
+
+                        <!-- Cuerpo de la tarjeta -->
+                        <div class="contenido-card-body">
+                            <!-- 🔹 Indicador de progreso -->
+                            @if (contenido.FechaProgreso.HasValue)
+                            {
+                                <div class="mb-3 text-end">
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Completado el @contenido.FechaProgreso.Value.ToString("dd/MM/yyyy")
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3 text-end">
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-hourglass-split"></i> Pendiente
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="tipo-badge tipo-@contenido.Tipo">
+                                    @contenido.Tipo
+                                </span>
+                                @if (contenido.EsTarea)
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-star-fill"></i> Es Tarea (Peso: @contenido.Peso)
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Preview del contenido -->
+                            <div class="mb-3">
+                                @if (!string.IsNullOrEmpty(contenido.JsonContenido))
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> Contenido disponible
+                                    </small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-exclamation-triangle"></i> Sin contenido
+                                    </small>
+                                }
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-grid gap-2">
+                                @if (contenido.EsTarea)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" onclick="viewContenido(@contenido.IdContenido)">
+                                        <i class="bi bi-eye"></i> Ver Formulario
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-success btn-sm" onclick="viewContenido(@contenido.IdContenido)">
+                                        <i class="bi bi-eye"></i> Ver Contenido
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body empty-state">
+                        <i class="bi bi-file-earmark-text"></i>
+
+                        @if (ViewBag.EsInstructor)
+                        {
+                            <h3 class="mt-3">No hay contenido en este módulo</h3>
+                            <p class="text-muted">Comienza agregando lecturas, videos o tareas</p>
+                            <div class="create-buttons-group mt-3">
+                                <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createContenidoLecturaModal">
+                                    <i class="bi bi-file-text"></i> Crear Lectura
+                                </button>
+                                <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#createContenidoTareaModal">
+                                    <i class="bi bi-clipboard-check"></i> Crear Tarea
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <h3 class="mt-3">Aún no hay contenidos disponibles</h3>
+                            <p class="text-muted">El instructor aún no ha publicado materiales para este módulo.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+<!-- Modales -->
+@if (ViewBag.EsInstructor)
+{
+    @await Html.PartialAsync("~/Views/Pwa/Contenidos/_CreateContenidoLecturaModal.cshtml", new eduMentor.Models.Contenido())
+}
+@section Scripts {
+    <script>
+        // ==============================
+        // VARIABLES GLOBALES
+        // ==============================
+        var idModuloGlobal = @ViewBag.IdModulo;
+
+        // ==============================
+        // ASIGNAR ID AL ABRIR MODAL DE CREACIÓN
+        // ==============================
+        document.getElementById('createContenidoLecturaModal')?.addEventListener('show.bs.modal', function () {
+            const inputIdModulo = document.getElementById('createLecturaIdModulo');
+            if (inputIdModulo) inputIdModulo.value = idModuloGlobal;
+            console.log('🟢 Modal abierto con IdModulo:', idModuloGlobal);
+        });
+
+        // ==============================
+        // RESTAURAR MODAL AL CERRAR (volver a modo creación)
+        // ==============================
+        document.getElementById('createContenidoLecturaModal')?.addEventListener('hidden.bs.modal', function () {
+            const form = this.querySelector('form');
+            form.action = "/Contenidos/Create";
+            this.querySelector('button[type="submit"]').innerHTML =
+                `<i class="bi bi-check-circle"></i> Crear Lectura`;
+            document.querySelector('#createContenidoLecturaModalLabel').innerHTML =
+                `<i class="bi bi-file-earmark-text"></i> Crear Contenido de Lectura`;
+
+            // Limpiar campos
+            document.getElementById('createLecturaTitulo').value = "";
+            document.getElementById('createLecturaTipo').value = "Lectura";
+            document.getElementById('createLecturaOrden').value = 1;
+            document.getElementById('createLecturaContenido').value = "";
+            document.getElementById('createLecturaJsonContenido').value = "";
+        });
+
+        // ==============================
+        // VER CONTENIDO (LECTURA O TAREA)
+        // ==============================
+        function viewContenido(id) {
+            fetch(`/Contenidos/GetContenido/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.esTarea)
+                        window.location.href = `/Contenidos/Formulario/${id}`;
+                    else
+                        window.location.href = `/Contenidos/Vista/${id}`;
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error al obtener el contenido.");
+                });
+        }
+
+        // ==============================
+        // EDITAR CONTENIDO
+        // ==============================
+        function openEditContenido(id) {
+            fetch(`/Contenidos/GetContenido/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log("🟢 Editando contenido:", data);
+
+                    // 🔹 Si es tarea → redirige al editor de formulario
+                    if (data.esTarea) {
+                        window.location.href = `/Contenidos/CreateTarea?idModulo=${data.idModulo}&idContenido=${data.idContenido}`;
+                        return;
+                    }
+
+                    // 🔹 Si es lectura o recurso → abre modal
+                    if (data.tipo === "Lectura" || data.tipo === "Recurso") {
+                        const modal = document.getElementById('createContenidoLecturaModal');
+                        const form = modal.querySelector('form');
+                        const tituloInput = document.getElementById('createLecturaTitulo');
+                        const tipoSelect = document.getElementById('createLecturaTipo');
+                        const ordenInput = document.getElementById('createLecturaOrden');
+                        const contenidoText = document.getElementById('createLecturaContenido');
+                        const hiddenJson = document.getElementById('createLecturaJsonContenido');
+                        const idModuloInput = document.getElementById('createLecturaIdModulo');
+
+                        form.action = "/Contenidos/Edit";
+                        idModuloInput.value = data.idModulo;
+                        tituloInput.value = data.titulo;
+                        tipoSelect.value = data.tipo;
+                        ordenInput.value = data.orden;
+                        hiddenJson.value = data.jsonContenido || "";
+
+                        try {
+                            const parsed = JSON.parse(data.jsonContenido || "{}");
+                            contenidoText.value = parsed.contenido || "";
+                        } catch {
+                            contenidoText.value = "";
+                        }
+
+                        // Cambiar encabezado visualmente a modo edición
+                        document.querySelector('#createContenidoLecturaModalLabel').innerHTML =
+                            `<i class="bi bi-pencil-square"></i> Editar Contenido de Lectura`;
+                        modal.querySelector('button[type="submit"]').innerHTML =
+                            `<i class="bi bi-save"></i> Guardar Cambios`;
+
+                        new bootstrap.Modal(modal).show();
+                    } else {
+                        alert("⚠️ Este tipo de contenido no se puede editar desde aquí todavía.");
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Error al cargar contenido:", err);
+                    alert("Error al cargar los datos del contenido.");
+                });
+        }
+
+        // ==============================
+        // ELIMINAR CONTENIDO
+        // ==============================
+        function confirmDelete(id, titulo) {
+            if (confirm(`¿Estás seguro de que deseas eliminar "${titulo}"?\n\nEsta acción no se puede deshacer.`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/Contenidos/Delete/${id}`;
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) {
+                    const hiddenToken = document.createElement('input');
+                    hiddenToken.type = 'hidden';
+                    hiddenToken.name = '__RequestVerificationToken';
+                    hiddenToken.value = token.value;
+                    form.appendChild(hiddenToken);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // ==============================
+        // FILTROS DE BÚSQUEDA
+        // ==============================
+        document.getElementById('searchInput')?.addEventListener('keyup', filterContenidos);
+        document.getElementById('tipoFilter')?.addEventListener('change', filterContenidos);
+
+        function filterContenidos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tipoFilter = document.getElementById('tipoFilter').value;
+            const contenidos = document.querySelectorAll('.contenido-item');
+
+            contenidos.forEach(contenido => {
+                const titulo = contenido.dataset.titulo || '';
+                const tipo = contenido.dataset.tipo;
+                const matchSearch = titulo.includes(searchTerm);
+                const matchTipo = !tipoFilter || tipo === tipoFilter;
+                contenido.style.display = (matchSearch && matchTipo) ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('tipoFilter').value = '';
+            filterContenidos();
+        }
+
+        // ==============================
+        // MENSAJES DE ALERTA
+        // ==============================
+        @if (TempData["Success"] != null)
+        {
+                    <text>
+                    window.addEventListener('load', function() {
+                        alert('@TempData["Success"]');
+                    });
+                    </text>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+                    <text>
+                    window.addEventListener('load', function() {
+                        alert('@TempData["Error"]');
+                    });
+                    </text>
+        }
+    </script>
+}
+
+

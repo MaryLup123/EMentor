@@ -1,0 +1,149 @@
+﻿@model eduMentor.Models.Contenido
+
+@{
+    bool esEdicion = Model != null && Model.IdContenido > 0;
+    string tituloModal = esEdicion ? "Editar Contenido de Lectura" : "Crear Contenido de Lectura";
+    string accion = esEdicion ? "Edit" : "Create";
+    string botonTexto = esEdicion ? "Guardar Cambios" : "Crear Lectura";
+    string colorEncabezado = esEdicion ? "linear-gradient(135deg, #38ef7d 0%, #11998e 100%)" : "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
+}
+
+<div class="modal fade" id="createContenidoLecturaModal" tabindex="-1" aria-labelledby="createContenidoLecturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background:@colorEncabezado; color: white;">
+                <h5 class="modal-title" id="createContenidoLecturaModalLabel">
+                    <i class="bi bi-file-earmark-text"></i> @tituloModal
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="@accion" asp-controller="Contenidos" method="post" id="createLecturaForm" onsubmit="return prepareSubmitLectura()">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <!-- Campos ocultos -->
+                    <input type="hidden" name="IdContenido" value="@Model.IdContenido" />
+                    <input type="hidden" name="IdModulo" id="createLecturaIdModulo" value="@ViewBag.IdModulo" />
+                    <input type="hidden" name="FechaCreacion" value="@Model.FechaCreacion.ToString("o")" />
+                    <input type="hidden" name="EsTarea" value="false" />
+                    <input type="hidden" name="JsonContenido" id="createLecturaJsonContenido" value="@Model.JsonContenido" />
+                    <input type="hidden" name="Peso" value="@Model.Peso" />
+
+                    <div class="row g-3">
+                        <!-- Título -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-type"></i> Título del Contenido *
+                            </label>
+                            <input name="Titulo" id="createLecturaTitulo" class="form-control"
+                                   value="@Model.Titulo" placeholder="Ej: Introducción al curso" required />
+                        </div>
+
+                        <!-- Orden -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-list-ol"></i> Orden *
+                            </label>
+                            <input name="Orden" id="createLecturaOrden" type="number" class="form-control" min="1"
+                                   value="@(Model.Orden == 0 ? 1 : Model.Orden)" required />
+                            <small class="text-muted">Posición en la lista</small>
+                        </div>
+
+                        <!-- Tipo -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="bi bi-tag"></i> Tipo *
+                            </label>
+                            <select name="Tipo" id="createLecturaTipo" class="form-select">
+                                <option value="Lectura" selected="@(Model.Tipo == "Lectura")">📘 Lectura</option>
+                                <option value="Recurso" selected="@(Model.Tipo == "Recurso")">📎 Recurso</option>
+                            </select>
+
+                        </div>
+
+                        <!-- Contenido principal -->
+                        <div class="col-md-12">
+                            <label for="createLecturaContenido" class="form-label fw-bold">
+                                <i class="bi bi-journal-text"></i> Contenido *
+                            </label>
+                            <textarea id="createLecturaContenido" class="form-control" rows="12" required
+                                      placeholder="Escribe aquí el contenido completo de la lectura..."></textarea>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> El texto se guardará en formato JSON.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> @botonTexto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ✅ Precargar contenido si es edición
+    document.addEventListener("DOMContentLoaded", () => {
+        const jsonRaw = document.getElementById('createLecturaJsonContenido').value;
+        if (jsonRaw) {
+            try {
+                const data = JSON.parse(jsonRaw);
+                if (data.contenido) {
+                    document.getElementById('createLecturaContenido').value = data.contenido;
+                    console.log('🟢 Contenido precargado desde JSON');
+                }
+            } catch (err) {
+                console.warn('⚠️ Error al parsear JSON:', err);
+            }
+        }
+    });
+
+    // ✅ Lógica original del Create, sin cambios
+    function prepareSubmitLectura() {
+        const contenido = document.getElementById('createLecturaContenido').value.trim();
+        const idModulo = document.getElementById('createLecturaIdModulo').value;
+
+        console.log('=== VALIDANDO DATOS ===');
+        console.log('IdModulo:', idModulo);
+        console.log('Titulo:', document.getElementById('createLecturaTitulo').value);
+        console.log('Tipo:', document.getElementById('createLecturaTipo').value);
+        console.log('Orden:', document.getElementById('createLecturaOrden').value);
+        console.log('Contenido length:', contenido.length);
+
+        // Validar que haya contenido
+        if (!contenido) {
+            alert("Debe ingresar el contenido principal.");
+            return false;
+        }
+
+        // Validar que IdModulo esté presente
+        if (!idModulo || idModulo === '' || idModulo === '0') {
+            alert("Error: No se pudo obtener el ID del módulo. Recargue la página e intente nuevamente.");
+            console.error('IdModulo está vacío o es 0');
+            return false;
+        }
+
+        // Crear JSON
+        const jsonData = {
+            contenido: contenido,
+            tipo: "lectura",
+            formato: "texto"
+        };
+
+        document.getElementById('createLecturaJsonContenido').value = JSON.stringify(jsonData);
+
+        console.log('=== DATOS FINALES ===');
+        console.log('JsonContenido:', JSON.stringify(jsonData));
+        console.log('Formulario listo para enviar');
+
+        return true;
+    }
+</script>

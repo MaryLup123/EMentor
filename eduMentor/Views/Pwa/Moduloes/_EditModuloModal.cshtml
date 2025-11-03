@@ -1,0 +1,125 @@
+﻿@model eduMentor.Models.Modulo
+
+<div class="modal fade" id="editModuloModal" tabindex="-1" aria-labelledby="editModuloModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+                <h5 class="modal-title" id="editModuloModalLabel">
+                    <i class="bi bi-pencil-square"></i> Editar Módulo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="Edit" asp-controller="Moduloes" method="post" id="editModuloForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" asp-for="IdModulo" id="editIdModulo" />
+                    <input type="hidden" asp-for="IdCurso" id="editIdCurso" />
+                    <input type="hidden" asp-for="FechaCreacion" id="editFechaCreacion" />
+
+                    <div class="row g-3">
+                        <!-- Título del Módulo -->
+                        <div class="col-md-12">
+                            <label asp-for="Titulo" class="form-label">
+                                <i class="bi bi-text-left"></i> Título del Módulo *
+                            </label>
+                            <input asp-for="Titulo" class="form-control" id="editTitulo" placeholder="Ej: Introducción a la programación" required />
+                            <span asp-validation-for="Titulo" class="text-danger"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-md-12">
+                            <label asp-for="Descripcion" class="form-label">
+                                <i class="bi bi-card-text"></i> Descripción
+                            </label>
+                            <textarea asp-for="Descripcion" class="form-control" id="editDescripcion" rows="3"
+                                      placeholder="Describe brevemente el contenido de este módulo..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <!-- Orden y Duración -->
+                        <div class="col-md-6">
+                            <label asp-for="Orden" class="form-label">
+                                <i class="bi bi-list-ol"></i> Orden *
+                            </label>
+                            <input asp-for="Orden" type="number" class="form-control" id="editOrden" min="1" placeholder="1, 2, 3..." required />
+                            <small class="text-muted">Posición del módulo en el curso</small>
+                            <span asp-validation-for="Orden" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DuracionMinutos" class="form-label">
+                                <i class="bi bi-clock"></i> Duración (minutos) *
+                            </label>
+                            <input asp-for="DuracionMinutos" type="number" class="form-control" id="editDuracionMinutos" min="1" placeholder="60" required />
+                            <small class="text-muted">Tiempo estimado de estudio</small>
+                            <span asp-validation-for="DuracionMinutos" class="text-danger"></span>
+                        </div>
+
+                        <!-- Estado Activo -->
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="Activo" class="form-check-input" type="checkbox" id="estadoEditSwitch">
+                                        <label class="form-check-label" for="estadoEditSwitch">
+                                            <i class="bi bi-toggle-on"></i> <strong>Módulo Activo</strong>
+                                            <br>
+                                            <small class="text-muted">Los módulos activos son visibles para los estudiantes</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Fecha de Creación -->
+                        <div class="col-md-12">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-calendar-check"></i>
+                                <strong>Fecha de Creación:</strong> <span id="editInfoFechaCreacion">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning text-white">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    #editModuloModal .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    #editModuloModal .form-control:focus,
+    #editModuloModal .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
+
+    #editModuloModal .form-check-input:checked {
+        background-color: #ffc107;
+        border-color: #ffc107;
+    }
+
+    #editModuloModal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,86 @@
+﻿@model eduMentor.Models.Curso
+
+<div class="modal fade" id="createCursoModal" tabindex="-1" aria-labelledby="createCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createCursoModalLabel">
+                    <i class="bi bi-plus-circle"></i> Crear Nuevo Curso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="Create" asp-controller="Cursos" method="post" id="createCursoForm">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="row g-3">
+                        <!-- Título -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-card-heading text-primary"></i> Título del Curso <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Titulo" class="form-control form-control-lg" placeholder="Ej: Introducción a la Programación" />
+                            <span asp-validation-for="Titulo" class="text-danger"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-text-paragraph text-success"></i> Descripción
+                            </label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="4"
+                                      placeholder="Describe los objetivos y lo que aprenderán los estudiantes..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <!-- Nivel -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-bar-chart text-info"></i> Nivel <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Nivel" class="form-select form-select-lg">
+                                <option value="">Seleccionar nivel...</option>
+                                <option value="Principiante">Principiante</option>
+                                <option value="Intermedio">Intermedio</option>
+                                <option value="Avanzado">Avanzado</option>
+                            </select>
+                            <span asp-validation-for="Nivel" class="text-danger"></span>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-toggle-on text-primary"></i> Estado del Curso
+                            </label>
+                            <div class="form-check form-switch mt-3">
+                                <input asp-for="Estado" class="form-check-input" type="checkbox" id="estadoCreateSwitch" style="width:3em; height:1.5em;">
+                                <label class="form-check-label ms-2" for="estadoCreateSwitch">Curso Activo</label>
+                            </div>
+                            <small class="text-muted">Los cursos activos son visibles para los estudiantes</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i> <strong>Nota:</strong> Después de crear el curso, podrás agregar módulos y contenido educativo.
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Crear Curso
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

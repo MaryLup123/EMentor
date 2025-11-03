@@ -1,0 +1,86 @@
+﻿<div class="modal fade" id="editCursoModal" tabindex="-1" aria-labelledby="editCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editCursoModalLabel">
+                    <i class="bi bi-pencil-square"></i> Editar Curso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="Edit" asp-controller="Cursos" method="post" id="editCursoForm">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div class="alert alert-danger" style="display:none;" id="editValidationSummary"></div>
+
+                    <input type="hidden" name="IdCurso" id="editIdCurso" />
+                    <input type="hidden" name="IdInstructor" id="editIdInstructor" />
+                    <input type="hidden" name="FechaCreacion" id="editFechaCreacion" />
+
+                    <div class="row g-3">
+                        <!-- Título -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-card-heading text-primary"></i> Título del Curso
+                            </label>
+                            <input name="Titulo" id="editTitulo" class="form-control form-control-lg" required />
+                            <span class="text-danger" data-valmsg-for="Titulo"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-text-paragraph text-success"></i> Descripción
+                            </label>
+                            <textarea name="Descripcion" id="editDescripcion" class="form-control" rows="4"></textarea>
+                            <span class="text-danger" data-valmsg-for="Descripcion"></span>
+                        </div>
+
+                        <!-- Nivel -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-bar-chart text-info"></i> Nivel
+                            </label>
+                            <select name="Nivel" id="editNivel" class="form-select form-select-lg" required>
+                                <option value="">Seleccionar nivel...</option>
+                                <option value="Principiante">Principiante</option>
+                                <option value="Intermedio">Intermedio</option>
+                                <option value="Avanzado">Avanzado</option>
+                            </select>
+                            <span class="text-danger" data-valmsg-for="Nivel"></span>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-toggle-on text-primary"></i> Estado del Curso
+                            </label>
+                            <div class="form-check form-switch mt-3">
+                                <input name="Estado" class="form-check-input" type="checkbox" id="estadoEditSwitch" style="width:3em; height:1.5em;" value="true">
+                                <input type="hidden" name="Estado" value="false">
+                                <label class="form-check-label ms-2" for="estadoEditSwitch">Curso Activo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light mt-3">
+                        <small>
+                            <strong>Creado:</strong> <span id="editInfoFechaCreacion"></span> |
+                            <strong>Última actualización:</strong> se actualizará automáticamente.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

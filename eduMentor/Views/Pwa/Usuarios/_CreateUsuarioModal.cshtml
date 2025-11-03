@@ -1,0 +1,101 @@
+﻿@model eduMentor.Models.ViewModels.UsuarioViewModel
+
+<div class="modal fade" id="createUsuarioModal" tabindex="-1" aria-labelledby="createUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createUsuarioModalLabel">
+                    <i class="bi bi-person-plus"></i> Crear Nuevo Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="Create" asp-controller="Usuarios" method="post" id="createUsuarioForm">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="row g-3">
+                        <!-- Nombre completo -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person text-primary"></i> Nombre Completo
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Juan Pérez" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <!-- Usuario -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person-badge text-info"></i> Usuario
+                            </label>
+                            <input asp-for="UserName" class="form-control" placeholder="Ej: jperez" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-at text-success"></i> Email
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="Ej: juan@correo.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-key text-danger"></i> Contraseña
+                            </label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Mínimo 6 caracteres" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-telephone text-warning"></i> Teléfono
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Ej: +502 1234-5678" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <!-- Rol -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-shield-check text-primary"></i> Rol
+                            </label>
+                            <select asp-for="Role" class="form-select" asp-items="@(new SelectList(ViewBag.Roles))">
+                                <option value="">Seleccionar rol...</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
+
+                        <!-- Activo -->
+                        <div class="col-md-6 mt-4">
+                            <div class="form-check form-switch">
+                                <input asp-for="Activo" class="form-check-input" type="checkbox" id="activoCreateSwitch" checked>
+                                <label class="form-check-label" for="activoCreateSwitch">Usuario Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Crear Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

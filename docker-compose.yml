@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres_eduMentor
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: eduMentorDB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - edumentor-network
+
+  edumentor:
+    image: ${DOCKER_REGISTRY-}edumentor
+    build:
+      context: .
+      dockerfile: eduMentor/Dockerfile
+      args:
+        BUILD_CONFIGURATION: Release
+    container_name: edumentor_web
+    depends_on:
+      - postgres
+    networks:
+      - edumentor-network
+
+volumes:
+  postgres_data:
+
+networks:
+  edumentor-network:
+    driver: bridge

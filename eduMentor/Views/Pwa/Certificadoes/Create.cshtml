@@ -1,0 +1,55 @@
+﻿@model eduMentor.Models.Certificado
+
+@{
+    ViewData["Title"] = "Certificado de Curso";
+}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .certificado-card {
+        text-align: center;
+        padding: 3rem;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary {
+        background: #667eea;
+        border: none;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="page-header">
+        <h1 class="mb-2"><i class="bi bi-award"></i> ¡Felicidades, @ViewBag.NombreEstudiante!</h1>
+        <p>Has completado satisfactoriamente el curso <strong>@ViewBag.NombreCurso</strong></p>
+    </div>
+
+    <div class="certificado-card">
+        <h4>Emitido el <strong>@Model.FechaGeneracion.ToString("dd/MM/yyyy")</strong></h4>
+        <p class="mt-3 mb-4 text-muted">Tu dedicación y esfuerzo te han hecho merecedor de este reconocimiento.</p>
+
+        <a class="btn btn-primary btn-lg" href="@Model.UrlPDF" target="_blank">
+            <i class="bi bi-filetype-pdf"></i> Descargar Certificado en PDF
+        </a>
+
+        <div class="mt-4">
+            <a href="/Cursos" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a mis cursos
+            </a>
+        </div>
+        <a class="btn btn-primary btn-lg" href="@Url.Action("DescargarPdf", "Certificadoes", new { id = Model.IdCertificado })" target="_blank">
+            <i class="bi bi-filetype-pdf"></i> Descargar Certificado en PDF
+        </a>
+
+    </div>
+</div>

@@ -1,0 +1,204 @@
+﻿@model eduMentor.Models.Contenido
+
+<!-- TinyMCE -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<!-- SurveyJS -->
+<link href="https://unpkg.com/survey-core@1.9.116/survey.core.min.css" rel="stylesheet" />
+<link href="https://unpkg.com/survey-creator-core@1.9.116/survey-creator-core.min.css" rel="stylesheet" />
+<script src="https://unpkg.com/survey-core@1.9.116/survey.core.min.js"></script>
+<script src="https://unpkg.com/survey-creator-core@1.9.116/survey-creator-core.min.js"></script>
+<script src="https://unpkg.com/survey-creator-knockout@1.9.116/survey-creator-knockout.min.js"></script>
+
+<div class="modal fade" id="editContenidoModal" tabindex="-1" aria-labelledby="editContenidoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 95%;">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+                <h5 class="modal-title" id="editContenidoModalLabel">
+                    <i class="bi bi-pencil-square"></i> Editar Contenido
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="Edit" asp-controller="Contenidos" method="post" id="editContenidoForm" onsubmit="return prepareSubmitEdit()">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <!-- Hidden fields -->
+                    <input type="hidden" asp-for="IdContenido" id="editIdContenido" />
+                    <input type="hidden" asp-for="IdModulo" id="editIdModulo" />
+                    <input type="hidden" asp-for="FechaCreacion" id="editFechaCreacion" />
+                    <input type="hidden" asp-for="JsonContenido" id="editJsonContenido" />
+                    <input type="hidden" asp-for="EsTarea" id="editEsTarea" />
+
+                    <div class="row g-3">
+                        <!-- Título -->
+                        <div class="col-md-8">
+                            <label asp-for="Titulo" class="form-label">
+                                <i class="bi bi-text-left"></i> Título *
+                            </label>
+                            <input asp-for="Titulo" class="form-control" id="editTitulo" required />
+                        </div>
+
+                        <!-- Tipo -->
+                        <div class="col-md-4">
+                            <label asp-for="Tipo" class="form-label">
+                                <i class="bi bi-tag"></i> Tipo *
+                            </label>
+                            <input asp-for="Tipo" class="form-control" id="editTipo" readonly />
+                            <small class="text-muted">No se puede cambiar el tipo</small>
+                        </div>
+
+                        <!-- Orden y Peso -->
+                        <div class="col-md-6">
+                            <label asp-for="Orden" class="form-label">
+                                <i class="bi bi-list-ol"></i> Orden *
+                            </label>
+                            <input asp-for="Orden" type="number" class="form-control" id="editOrden" min="1" required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Peso" class="form-label">
+                                <i class="bi bi-star"></i> Peso *
+                            </label>
+                            <input asp-for="Peso" type="number" step="0.1" class="form-control" id="editPeso" min="0.1" required />
+                        </div>
+
+                        <!-- Sección Lectura -->
+                        <div id="editLecturaSection" style="display:none;">
+                            <div class="col-12 mt-3">
+                                <label for="editContenidoDescripcion" class="form-label">
+                                    <i class="bi bi-card-text"></i> Descripción
+                                </label>
+                                <textarea id="editContenidoDescripcion" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <label for="editContenidoTexto" class="form-label">
+                                    <i class="bi bi-file-earmark-text"></i> Contenido
+                                </label>
+                                <textarea id="editContenidoTexto"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Sección Survey/Tarea -->
+                        <div id="editTareaSection" style="display:none;">
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Editor de Formulario:</strong> Puedes modificar las preguntas y estructura del cuestionario.
+                            </div>
+                            <div id="editSurveyContainer" style="height: 500px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning text-white">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let editSurveyCreator = null;
+
+    // Cargar datos en el modal
+    async function loadContenidoToEdit(id) {
+        const response = await fetch(`/Contenidos/GetContenido/${id}`);
+        const data = await response.json();
+
+        // Asignar datos base
+        document.getElementById('editIdContenido').value = data.idContenido;
+        document.getElementById('editIdModulo').value = data.idModulo;
+        document.getElementById('editTitulo').value = data.titulo;
+        document.getElementById('editTipo').value = data.tipo;
+        document.getElementById('editOrden').value = data.orden;
+        document.getElementById('editPeso').value = data.peso;
+        document.getElementById('editFechaCreacion').value = data.fechaCreacion;
+        document.getElementById('editEsTarea').value = data.esTarea;
+
+        // Parsear JSON del contenido
+        const json = JSON.parse(data.jsonContenido || "{}");
+
+        // Mostrar editor correspondiente
+        if (data.esTarea) {
+            document.getElementById('editTareaSection').style.display = "block";
+            document.getElementById('editLecturaSection').style.display = "none";
+
+            // Inicializar Survey Creator si no existe
+            if (!editSurveyCreator) {
+                const opts = {
+                    showLogicTab: true,
+                    showJSONEditorTab: true,
+                    showTestSurveyTab: true,
+                    showPropertyGrid: true
+                };
+                editSurveyCreator = new SurveyCreator.SurveyCreator(opts);
+                editSurveyCreator.render("editSurveyContainer");
+                Survey.StylesManager.applyTheme("defaultV2");
+            }
+
+            // Cargar el formulario existente
+            editSurveyCreator.JSON = json.surveySchema || json.formulario || json;
+        } else {
+            document.getElementById('editLecturaSection').style.display = "block";
+            document.getElementById('editTareaSection').style.display = "none";
+
+            // Inicializar TinyMCE si aún no existe
+            if (!tinymce.get('editContenidoTexto')) {
+                tinymce.init({
+                    selector: '#editContenidoTexto',
+                    height: 350,
+                    menubar: false,
+                    plugins: 'link lists image code table',
+                    toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code',
+                    branding: false,
+                    language: 'es'
+                });
+            }
+
+            // Cargar datos de lectura
+            document.getElementById('editContenidoDescripcion').value = json.descripcion || "";
+            setTimeout(() => {
+                tinymce.get('editContenidoTexto').setContent(json.textoHtml || json.texto || "");
+            }, 500);
+        }
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('editContenidoModal'));
+        modal.show();
+    }
+
+    // Preparar JSON para envío
+    function prepareSubmitEdit() {
+        const esTarea = document.getElementById('editEsTarea').value === "true";
+
+        if (esTarea) {
+            const surveyJSON = editSurveyCreator.JSON;
+            const jsonData = {
+                tipo: "formulario",
+                descripcion: surveyJSON.description || "",
+                surveySchema: surveyJSON,
+                formato: "surveyjs",
+                version: "1.0"
+            };
+            document.getElementById('editJsonContenido').value = JSON.stringify(jsonData);
+        } else {
+            const descripcion = document.getElementById('editContenidoDescripcion').value;
+            const contenido = tinymce.get('editContenidoTexto').getContent();
+            const jsonData = {
+                tipo: "lectura",
+                descripcion: descripcion,
+                textoHtml: contenido,
+                formato: "html"
+            };
+            document.getElementById('editJsonContenido').value = JSON.stringify(jsonData);
+        }
+
+        return true;
+    }
+</script>

@@ -1,0 +1,291 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Usuario> SignInManager
+@inject UserManager<Usuario> UserManager
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    Layout = null;
+
+    var user = await UserManager.GetUserAsync(User);
+    var userName = user?.Nombre ?? "Invitado";
+    string userRole = "Sin rol";
+
+    if (user != null)
+    {
+        var roles = await UserManager.GetRolesAsync(user);
+        userRole = roles.FirstOrDefault() ?? "Sin rol";
+    }
+
+    var currentUrl = Context.Request.Path.Value?.ToLower() ?? "";
+    bool sidebarEnabled = ViewBag.SidebarEnabled ?? true;
+}
+
+@functions {
+    public string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "??";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1
+            ? new string(parts[0].Take(2).ToArray()).ToUpper()
+            : $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - eduMentor</title>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap JS + Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="https://kit.fontawesome.com/a2e0e9d3f5.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #1E3A8A;
+            color: #fff;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            background-color: #1E40AF;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+            .sidebar a:hover,
+            .sidebar a.active {
+                background-color: #3b82f6;
+                color: #fff;
+            }
+
+            .sidebar a i {
+                margin-right: 10px;
+                width: 20px;
+            }
+
+        .disabled-sidebar {
+            opacity: 0.5;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .header {
+            background-color: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            background-color: #1E3A8A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background-color 0.3s ease;
+        }
+
+            .user-avatar:hover {
+                background-color: #3b82f6;
+            }
+
+        .user-dropdown {
+            position: absolute;
+            top: 50px;
+            right: -10px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            min-width: 180px;
+            z-index: 100;
+        }
+
+            .user-dropdown.show {
+                display: block;
+            }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            padding: 2rem;
+            background-color: #f8fafc;
+        }
+
+        footer {
+            text-align: center;
+            padding: 0.75rem;
+            background-color: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+    </style>
+    <meta name="csrf-token" content="@(Antiforgery.GetAndStoreTokens(Context).RequestToken)" />
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar @(sidebarEnabled == false ? "disabled-sidebar" : "")">
+        <div class="sidebar-header">
+            📘 eduMentor
+        </div>
+
+        @if (sidebarEnabled)
+        {
+            // ==== ADMINISTRADOR ====
+            if (userRole.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+            {
+                <a href="/Pwa/Cursos" class="@(currentUrl.Contains("/pwa/cursos") ? "active" : "")">
+                    <i class="fa-solid fa-graduation-cap"></i> Cursos
+                </a>
+                <a href="/Pwa/Certificadoes" class="@(currentUrl.Contains("/pwa/certificadoes") ? "active" : "")">
+                    <i class="fa-solid fa-scroll"></i> Certificados
+                </a>
+                <a href="/Pwa/Roles" class="@(currentUrl.Contains("/pwa/roles") ? "active" : "")">
+                    <i class="fa-solid fa-users-gear"></i> Roles
+                </a>
+                <a href="/Pwa/Usuarios" class="@(currentUrl.Contains("/pwa/usuarios") ? "active" : "")">
+                    <i class="fa-solid fa-user"></i> Usuarios
+                </a>
+            }
+
+            // ==== INSTRUCTOR ====
+            else if (userRole.Equals("Instructor", StringComparison.OrdinalIgnoreCase))
+            {
+
+                <a href="/Pwa/ProgresoModuloes" class="@(currentUrl.Contains("/pwa/progresocontenidos") ? "active" : "")">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="/Pwa/Cursos" class="@(currentUrl.Contains("/pwa/cursos") ? "active" : "")">
+                    <i class="fa-solid fa-chalkboard-user"></i> Mis Cursos
+                </a>
+
+
+                <a href="/Pwa/Certificadoes" class="@(currentUrl.Contains("/pwa/certificadoes") ? "active" : "")">
+                    <i class="fa-solid fa-scroll"></i> Certificados
+                </a>
+            }
+
+            // ==== ALUMNO ====
+            else if (userRole.Equals("Alumno", StringComparison.OrdinalIgnoreCase))
+            {
+                <a href="/Pwa/ProgresoContenidos" class="@(currentUrl.Contains("/pwa/ProgresoContenidos") ? "active" : "")">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="/Pwa/Inscripcions" class="@(currentUrl.Contains("/pwa/Inscripcions") ? "active" : "")">
+                    <i class="fa-solid fa-chart-line"></i> Inscribirme
+                </a>
+                <a href="/Pwa/Cursos" class="@(currentUrl.Contains("/pwa/cursos") ? "active" : "")">
+                    <i class="fa-solid fa-book"></i> Mis Cursos
+                </a>
+
+                <a href="/Pwa/Certificadoes" class="@(currentUrl.Contains("/pwa/certificadoes") ? "active" : "")">
+                    <i class="fa-solid fa-scroll"></i> Certificados
+                </a>
+
+
+            }
+
+            // ==== OTROS ROLES (fallback) ====
+            else
+            {
+                <a href="/Pwa/Cursos"><i class="fa-solid fa-graduation-cap"></i> Cursos</a>
+            }
+        }
+        else
+        {
+            <div class="p-3 text-center text-warning fw-semibold">
+                ⚠️ Navegación bloqueada<br />
+                Completa tu inscripción para acceder al menú.
+            </div>
+        }
+    </nav>
+
+    <!-- Main Area -->
+    <div class="main-content">
+        <header class="header">
+            <h5 class="m-0 fw-bold text-primary">Panel - @userRole</h5>
+            <div class="user-info position-relative">
+                <div id="user-avatar" class="user-avatar" onclick="toggleDropdown()">
+                    @GetInitials(userName)
+                </div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <span class="fw-semibold d-block mb-2">@userName</span>
+                    <small class="text-muted">@userRole</small>
+                    <form method="post" asp-area="Identity" asp-page="/Account/Logout" id="logoutForm">
+                        <button type="submit" class="dropdown-item text-danger fw-semibold w-100 text-start">
+                            <i class="fa-solid fa-right-from-bracket me-2"></i> Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-wrapper">
+            @RenderBody()
+        </main>
+
+        <footer>
+            &copy; @DateTime.Now.Year - eduMentor | Plataforma de Microcursos
+        </footer>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+    <script>
+        function toggleDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('user-dropdown');
+            const avatar = document.getElementById('user-avatar');
+            if (!avatar.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
