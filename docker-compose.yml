@@ -13,19 +13,32 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:                          
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - edumentor-network
 
   edumentor:
-    image: ${DOCKER_REGISTRY-}edumentor
     build:
       context: .
       dockerfile: eduMentor/Dockerfile
       args:
         BUILD_CONFIGURATION: Release
+    image: edumentor:latest
     container_name: edumentor_web
-    depends_on:
-      - postgres
+    restart: always
+    depends_on:                            
+      postgres:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=eduMentorDB;Username=postgres;Password=123456
+      - DOTNET_PRINT_TELEMETRY_MESSAGE=false
+    ports:
+      - "8080:8080"
     networks:
       - edumentor-network
 

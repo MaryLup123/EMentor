@@ -131,21 +131,37 @@ app.MapRazorPages();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<ApplicationDbContext>();
+
+    try
+    {
+        app.Logger.LogInformation("📦 Aplicando migraciones pendientes...");
+        db.Database.Migrate(); 
+        app.Logger.LogInformation("✅ Migraciones aplicadas correctamente.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "❌ Error aplicando migraciones: {Message}", ex.Message);
+    }
+
     try
     {
         await SeedRolesAndAdmin(services);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"⚠️ Error al crear roles o admin: {ex.Message}");
+        app.Logger.LogError(ex, "⚠️ Error al crear roles o admin: {Message}", ex.Message);
     }
 }
+
 
 app.Run();
 
 // ===========================================
 // 🔹 Método auxiliar de semilla
 // ===========================================
+
+
 async Task SeedRolesAndAdmin(IServiceProvider services)
 {
     var roleManager = services.GetRequiredService<RoleManager<Role>>();
