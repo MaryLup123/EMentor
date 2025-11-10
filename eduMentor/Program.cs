@@ -9,10 +9,17 @@ using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = LicenseType.Community;
+
 // ===========================================
 // 🔹 1. Configuración de base de datos
 // ===========================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// ✅ Intenta leer la cadena desde variable de entorno (Render)
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+// Si no existe, usa la definida en appsettings.json (modo local)
+if (string.IsNullOrEmpty(connectionString))
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -49,12 +56,10 @@ builder.Services.AddSession(options =>
 // ===========================================
 // 🔹 4. MVC y Razor Pages
 // ===========================================
-builder.Services.AddControllersWithViews();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<eduMentor.Filters.SidebarStateFilter>();
 });
-
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -72,7 +77,7 @@ if (app.Environment.IsDevelopment())
 
         if (string.IsNullOrEmpty(path) || path == "/" || path.StartsWith("/home"))
         {
-            bool tieneSesion = context.User.Identity.IsAuthenticated ;
+            bool tieneSesion = context.User.Identity.IsAuthenticated;
 
             if (tieneSesion)
                 context.Response.Redirect("/Pwa/Index");
@@ -96,9 +101,7 @@ else
 // ===========================================
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -126,7 +129,7 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 // ===========================================
-// 🔹 8. Semilla de roles y usuario admin
+// 🔹 8. Migraciones y semilla
 // ===========================================
 using (var scope = app.Services.CreateScope())
 {
@@ -136,7 +139,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         app.Logger.LogInformation("📦 Aplicando migraciones pendientes...");
-        db.Database.Migrate(); 
+        db.Database.Migrate();
         app.Logger.LogInformation("✅ Migraciones aplicadas correctamente.");
     }
     catch (Exception ex)
@@ -154,14 +157,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 app.Run();
 
 // ===========================================
 // 🔹 Método auxiliar de semilla
 // ===========================================
-
-
 async Task SeedRolesAndAdmin(IServiceProvider services)
 {
     var roleManager = services.GetRequiredService<RoleManager<Role>>();
@@ -209,5 +209,4 @@ async Task SeedRolesAndAdmin(IServiceProvider services)
     {
         app.Logger.LogInformation("ℹ️ Usuario admin ya existe, no se recreará.");
     }
-
 }
